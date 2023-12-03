@@ -1,0 +1,123 @@
+﻿@page "/account"
+
+@using MudBlazor
+@using PTLab2_web.Data.Models;
+@using PTLab2_web.Data.Services.Interfaces;
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+
+@inject IShopDbService ShopDbService
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+
+<PageTitle>Аккаунт</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
+    @if (isLoading)
+    {
+        <MudProgressCircular Color="Color.Primary" Class="ma-10" Size="Size.Large" Indeterminate="true" />
+    }
+    else
+    {
+        @if (user is null)
+        {
+            <MudTabs MinimumTabWidth="200px" Elevation="4" Rounded="true"
+                     PanelClass="pa-4" ApplyEffectsToContainer="true" Centered="true">
+                <MudTabPanel Text="Войти">
+                    <MudForm @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudTextField T="string" Label="Электронная почта" Required="true" @ref="emailLogField" RequiredError="Электроннаая почта является обязательным полем."
+                                      Validation="@(new EmailAddressAttribute() {ErrorMessage = "Неправильный адрес электронной почты."})" />
+                        <MudTextField T="string" Label="Пароль" HelperText="Введите пароль." @ref="passwordLogField" Required="true"
+                                      RequiredError="Пароль является обязательным полем."
+                                      InputType="@passwordInput" Adornment="Adornment.End" AdornmentIcon="@passwordInputIcon" 
+                                      OnAdornmentClick="ShowPasswordField" AdornmentAriaLabel="Отобразить пароль" />
+
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success || loginProcessing)"
+                                   OnClick="Login" Class="ml-auto">
+                            @if (loginProcessing)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Обработка</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Войти</MudText>
+                            }
+                        </MudButton>
+                    </MudForm>
+                </MudTabPanel>
+                <MudTabPanel Text="Создать аккаунт">
+                    <MudForm @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudTextField T="string" Label="Имя" Required="true" @ref="nameField" RequiredError="Имя пользователя является обязательным полем." />
+                        <MudTextField T="string" Label="Электронная почта" Required="true" RequiredError="Электронная почта является обязательным полем."
+                                      Validation="@(new EmailAddressAttribute() {ErrorMessage = "Неправильный адрес электронной почты."})" @ref="emailField" />
+                        <MudTextField T="string" Label="Пароль" HelperText="Выберите надежный пароль" @ref="passwordField"
+                                      Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
+                                      RequiredError="Пароль является обязательным полем."
+                                      InputType="@passwordInput" Adornment="Adornment.End" AdornmentIcon="@passwordInputIcon"
+                                      OnAdornmentClick="ShowPasswordField" AdornmentAriaLabel="Отобразить пароль" />
+                        <MudTextField T="string"
+                                      Label="Пароль" HelperText="Повторите пароль." Validation="@(new Func<string, string>(PasswordMatch))"
+                                      InputType="@passwordInput" Adornment="Adornment.End" AdornmentIcon="@passwordInputIcon"
+                                      OnAdornmentClick="ShowPasswordField" AdornmentAriaLabel="Отобразить пароль" />
+                        <MudCheckBox T="bool" Required="true" RequiredError="Вы должны согласиться." Label="Я согласен создать аккаунт" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success || registerProcessing)"
+                                   OnClick="CreateAccount" Class="ml-auto">
+                            @if (registerProcessing)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Обработка</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Создать аккаунт</MudText>
+                            }
+                        </MudButton>
+                    </MudForm>
+                </MudTabPanel>
+            </MudTabs>
+        }
+        else
+        {
+            <MudStack>
+                <MudPaper Class="pa-4 mud-width-full">
+                    <MudStack>
+                        <MudText Typo="Typo.h5">Ваш аккаунт</MudText>
+                        <MudTextField @bind-Value="@user.Name" Label="Имя" ReadOnly="true" Variant="Variant.Text" />
+                        <MudTextField @bind-Value="@user.Email" Label="Электронная почта" ReadOnly="true" Variant="Variant.Text" />
+                        <MudTextField @bind-Value="@user.Password" Label="Пароль" ReadOnly="true" Variant="Variant.Text"
+                                      InputType="@passwordInput" Adornment="Adornment.End" AdornmentIcon="@passwordInputIcon"
+                                      OnAdornmentClick="ShowPasswordField" AdornmentAriaLabel="Отобразить пароль" />
+                        <MudButton Disabled="logoutProcessing" OnClick="Logout" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
+                            @if (logoutProcessing)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Обработка</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Выйти</MudText>
+                            }
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+
+                <MudTable T="Purchase" Items="@purchases" Hover="true" RowClass="cursor-pointer" FixedHeader="true" Height="380px"
+                          Loading="@isPurchasesLoading" LoadingProgressColor="Color.Primary">
+                    <HeaderContent>
+                        <MudTh>Название товара</MudTh>
+                        <MudTh>Цена товара</MudTh>
+                        <MudTh>Адрес</MudTh>
+                        <MudTh>Дата</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Название">@context.ProductName</MudTd>
+                        <MudTd DataLabel="Цена">@context.UsedPrice</MudTd>
+                        <MudTd DataLabel="Цена">@context.Address</MudTd>
+                        <MudTd DataLabel="Цена">@context.Date</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudStack>
+        }
+    }
+</MudContainer>

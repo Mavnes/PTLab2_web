@@ -1,0 +1,47 @@
+﻿@page "/purchase/{productId:int}"
+
+@using PTLab2_web.Data.Services.Interfaces;
+
+@inject IShopDbService ShopDbService
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<PageTitle>Покупка</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
+    @if (isLoading)
+    {
+        <MudProgressCircular Color="Color.Primary" Class="ma-10" Size="Size.Large" Indeterminate="true" />
+    }
+    else {
+        @if (product is not null)
+        {
+            <MudPaper MinWidth="200px" Class="pa-4 mud-width-full">
+                <MudStack>
+                    <MudText Typo="Typo.h5">Подтвердите покупку</MudText>
+                    <MudText>@product.Name:</MudText>
+                    <MudStack AlignItems="AlignItems.End" Row="true">
+                        <MudText>@GetSalePrice(product.Price)</MudText>
+                        <MudText Typo="Typo.caption"><del>@GetBasePrice(product.Price)</del></MudText>
+                    </MudStack>
+                    <MudTextField FullWidth="true" Required="true" @bind-Value="address" Label="Адрес" Variant="Variant.Text"></MudTextField>
+                    <MudStack Row="true">
+                        <MudButton OnClick="Cancel">Отмена</MudButton>
+                        <MudButton Disabled="DisableMakePurchaseButton()" Variant="Variant.Filled" Class="ml-auto" Color="Color.Primary" OnClick="Submit">
+                            @if (purchaseProcessing)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Обработка</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Купить</MudText>
+                            }
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+        }
+    }
+</MudContainer>

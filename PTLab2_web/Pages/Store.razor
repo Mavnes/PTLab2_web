@@ -1,0 +1,32 @@
+﻿@page "/"
+
+@using MudBlazor
+@using PTLab2_web.Data.Models;
+@using PTLab2_web.Data.Services.Interfaces;
+
+@inject IDialogService DialogService
+@inject IShopDbService ShopDbService
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<PageTitle>Каталог</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
+    <MudTable T="Product" Items="@products" Hover="true" RowClass="cursor-pointer" 
+                OnRowClick="RowClickEvent" Loading="@isLoading" LoadingProgressColor="Color.Primary">
+        <HeaderContent>
+            <MudTh>Название</MudTh>
+            <MudTh>Цена</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Название">@context.Name</MudTd>
+            <MudTd DataLabel="Цена">
+                <MudStack AlignItems="AlignItems.End" Row="true">
+                    <MudText>@GetSalePrice(context.Price)</MudText>
+                    <MudText Typo="Typo.caption"><del>@GetBasePrice(context.Price)</del></MudText>
+                </MudStack>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>

@@ -1,0 +1,20 @@
+﻿@using MudBlazor
+@using PTLab2_web.Data.Services.Interfaces;
+
+@inject IShopDbService ShopDbService
+@inject IUserService UserService
+
+<MudDialog >
+    <DialogContent>
+        <MudText>@product.Name</MudText>
+        <MudStack AlignItems="AlignItems.End" Row="true">
+            <MudText>@GetSalePrice(product.Price)</MudText>
+            <MudText Typo="Typo.caption"><del>@GetBasePrice(product.Price)</del></MudText>
+        </MudStack>
+        <MudTextField FullWidth="true" Required="true" @bind-Value="address" Label="Адрес" Variant="Variant.Text"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Disabled="string.IsNullOrEmpty(address)" Color="Color.Primary" OnClick="Submit">Купить</MudButton>
+    </DialogActions>
+</MudDialog>
